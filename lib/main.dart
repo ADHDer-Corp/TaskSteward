@@ -1,4 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:record/record.dart';
+import 'package:tasksteward/logger.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
 void main() {
   runApp(const MyApp());
@@ -13,39 +19,15 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'TaskSteward Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'TaskSteward Demo'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 
@@ -54,69 +36,96 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  final record = AudioRecorder();
+  String? _tempFilePath;
+  String? _audioBase64;
+
+  Future<void> _handleRecording() async {
+    if (await record.hasPermission()) {
+      // 获取临时目录
+      final tempDir = await getTemporaryDirectory();
+      _tempFilePath = path.join(tempDir.path, 'audio_recording_${DateTime.now().millisecondsSinceEpoch}.mp3');
+
+      if (_tempFilePath == null) {
+        logger.e("临时文件路径为空");
+        return;
+      }
+      
+      logger.t("开始录音，保存到: $_tempFilePath");
+      
+      // 开始录音并保存为MP3文件
+      await record.start(
+        const RecordConfig(
+          encoder: AudioEncoder.aacLc, // MP3编码器
+          bitRate: 128000,
+          sampleRate: 44100,
+        ),
+        path: _tempFilePath!,
+      );
+    }
+  }
+
+  Future<void> _handleStopRecording() async {
+    // 停止录音
+    final path = await record.stop();
+    logger.t("录音结束，保存在: $path");
+    
+    if (path != null) {
+      // 读取文件并转换为Base64
+      await _convertAudioToBase64(path);
+    }
+  }
+  
+  Future<void> _convertAudioToBase64(String filePath) async {
+    try {
+      final File file = File(filePath);
+      final bytes = await file.readAsBytes();
+      _audioBase64 = base64Encode(bytes);
+      
+      logger.t("音频文件已转换为Base64，$_audioBase64}");
+      
+      setState(() {}); // 更新UI以反映有了base64数据
+    } catch (e) {
+      logger.e("转换音频文件到Base64时出错: $e");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    ThemeData theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+            Text('Hi')
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      floatingActionButton: GestureDetector(
+        onLongPress: () {
+          logger.t("Long Press Record button");
+          _handleRecording();
+        },
+        onLongPressEnd: (_) {
+          logger.t("Long Press End Record button");
+          _handleStopRecording();
+        },
+        child: FloatingActionButton(
+          onPressed: () {
+            logger.t("Click Record button");
+          },
+          child: Icon(Icons.mic, color: theme.colorScheme.onPrimaryContainer,),
+        ),
+      )
     );
   }
 }
+
+
