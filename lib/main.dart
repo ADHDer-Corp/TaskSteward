@@ -1,14 +1,10 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:record/record.dart';
-import 'package:tasksteward/core/theme/theme.dart';
-import 'package:tasksteward/core/utils/logger.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path;
-import 'package:tasksteward/presentation/pages/home.dart';
 import 'package:provider/provider.dart';
+import 'package:tasksteward/core/theme/theme.dart';
+import 'package:tasksteward/presentation/pages/home.dart';
 import 'package:tasksteward/presentation/states/app_states.dart';
+
+
 
 void main() {
   runApp(const App());
