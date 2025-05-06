@@ -4,7 +4,7 @@ import 'package:tasksteward/core/theme/theme.dart';
 import 'package:tasksteward/presentation/pages/home.dart';
 import 'package:tasksteward/presentation/states/app_states.dart';
 
-
+import 'data/services/database.dart';
 
 void main() {
   runApp(const App());
@@ -16,11 +16,14 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => AppStates())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => AppStates()),
+        Provider(create: (_) => AppDatabase(), dispose: (_, db) => db.close()),
+      ],
       child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: themeData,
-          home: const HomePage()
+        debugShowCheckedModeBanner: false,
+        theme: themeData,
+        home: const HomePage(),
       ),
     );
   }
