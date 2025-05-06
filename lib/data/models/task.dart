@@ -1,13 +1,11 @@
 import 'package:drift/drift.dart';
 import 'package:tasksteward/data/models/converters/task_converter.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../core/enums/task_enums.dart';
 
 
 class TaskTemplates extends Table {
-  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(() =>
-      const Uuid().v4())();
+  IntColumn get id => integer().autoIncrement()();
 
   TextColumn get title => text().withLength(min: 1, max: 100)();
 
@@ -21,24 +19,23 @@ class TaskTemplates extends Table {
 
   TextColumn get repeat => text().map(const RRuleConverter()).nullable()();
 
-  TextColumn get category =>
-      text().withLength(min: 36, max: 36).nullable().references(TaskCategories, #id)();
+  IntColumn get category =>
+      integer().nullable().references(TaskCategories, #id)();
 
   BoolColumn get autoRepeat => boolean().withDefault(const Constant(false))();
 
-  TextColumn get parentTask =>
-      text().withLength(min: 36, max: 36).nullable().references(TaskTemplates, #id)();
+  IntColumn get parentTask =>
+      integer().nullable().references(TaskTemplates, #id)();
 
   @override
   Set<Column> get primaryKey => {id};
 }
 
 class TaskInstances extends Table {
-  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(() =>
-      const Uuid().v4())();
+  IntColumn get id => integer().autoIncrement()();
 
-  TextColumn get taskTemplate =>
-      text().withLength(min: 36, max: 36).references(TaskTemplates, #id)();
+  IntColumn get taskTemplate =>
+      integer().references(TaskTemplates, #id)();
 
   DateTimeColumn get createdAt => dateTime()();
 
@@ -51,8 +48,7 @@ class TaskInstances extends Table {
 }
 
 class TaskTags extends Table {
-  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(() =>
-      const Uuid().v4())();
+  IntColumn get id => integer().autoIncrement()();
 
   TextColumn get name => text().withLength(min: 1, max: 100)();
 
@@ -61,8 +57,7 @@ class TaskTags extends Table {
 }
 
 class TaskCategories extends Table {
-  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(() =>
-      const Uuid().v4())();
+  IntColumn get id => integer().autoIncrement()();
 
   TextColumn get name => text().withLength(min: 1, max: 100)();
 
@@ -79,8 +74,8 @@ class TaskCategories extends Table {
 }
 
 class TaskTemplateTagJunction extends Table {
-  TextColumn get taskTemplate => text().withLength(min: 36, max: 36).references(TaskTemplates, #id)();
-  TextColumn get taskTag => text().withLength(min: 36, max: 36).references(TaskTags, #id)();
+  IntColumn get taskTemplate => integer().references(TaskTemplates, #id)();
+  IntColumn get taskTag => integer().references(TaskTags, #id)();
 
   @override
   Set<Column> get primaryKey => {taskTemplate, taskTag};
