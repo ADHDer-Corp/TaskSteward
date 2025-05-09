@@ -3,7 +3,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rrule/rrule.dart';
 import 'package:tasksteward/core/enums/task_enums.dart';
-import 'package:tasksteward/data/services/database.dart';
+import 'package:tasksteward/data/sources/database.dart';
 
 // 创建内存数据库用于测试
 AppDatabase _createTestDb() {

@@ -4,7 +4,7 @@ import 'package:tasksteward/core/theme/theme.dart';
 import 'package:tasksteward/presentation/pages/home.dart';
 import 'package:tasksteward/presentation/states/app_states.dart';
 
-import 'data/services/database.dart';
+import 'data/sources/database.dart';
 
 void main() {
   runApp(const App());
